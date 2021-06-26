@@ -1,8 +1,9 @@
 from flask import Flask, render_template, request
 from datetime import date
 import pickle
+import numpy as np
 app = Flask(__name__)
-model = pickle.load(open('random_forest.pkl', 'rb'))
+model = pickle.load(open('XGBoost.pkl', 'rb'))
 @app.route('/',methods=['GET'])
 def Home():
     return render_template('index.html')
@@ -43,16 +44,15 @@ def predict():
             Transmission=1
         else:
             Transmission=0
-        prediction=model.predict([[Present_Price,drived,Owner,Year,Fuel_Type_Diesel,Fuel_Type_Petrol,
-                                   Seller_Type_Individual,Transmission]])
-        output=round(prediction[0],2)
-        if output<0:
+
+        inpt=np.asarray([[Present_Price,drived,Owner,Year,Fuel_Type_Diesel,Fuel_Type_Petrol,Seller_Type_Individual,Transmission]])   
+        prediction=model.predict(inpt)
+        if prediction<0:
             return render_template('index.html',prediction_texts="Sorry you cannot sell this car")
         else:
-            return render_template('index.html',prediction_text="You Can Sell The Car at {}".format(output))
+            return render_template('index.html', prediction_text="You Can Sell The Car at {}".format(prediction))
     else:
         return render_template('index.html')
-
+    
 if __name__=="__main__":
     app.run(debug=True)
-
